@@ -34,7 +34,7 @@ fun Sidebar(currentScreen: Screen, navigationState: NavigationState) {
             ) {
                 androidx.compose.foundation.Image(
                     painter = androidx.compose.ui.res.painterResource("icon.png"),
-                    contentDescription = "PeopleHub Logo",
+                    contentDescription = "Staff AT Logo",
                     modifier = Modifier
                         .size(40.dp)
                         .clip(RoundedCornerShape(8.dp))

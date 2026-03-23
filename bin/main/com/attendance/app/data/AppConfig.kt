@@ -24,6 +24,12 @@ object AppConfig {
     val apiAdminToken: String
         get() = props.getProperty("API_ADMIN_TOKEN", "a68cb2d148d5400f8686a4bd8450e8ce")
 
+    fun updateConfig(baseUrl: String, token: String) {
+        props.setProperty("API_BASE_URL", baseUrl)
+        props.setProperty("API_ADMIN_TOKEN", token)
+        save()
+    }
+
     private fun save() {
         configFile.outputStream().use { 
             props.store(it, "Staff AT Configuration")

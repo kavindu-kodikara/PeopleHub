@@ -273,6 +273,10 @@ fun DashboardScreen(navigationState: NavigationState) {
                                 }
                             }
                         })
+                        
+                        SecondaryButton(text = "Application Settings", icon = Icons.Default.Settings, onClick = {
+                            navigationState.navigateTo(Screen.Settings)
+                        })
                     }
                 }
             }

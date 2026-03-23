@@ -1,6 +1,17 @@
-# PeopleHub
+# Staff AT
 
-Welcome to **PeopleHub**, a clean, modern, and professional desktop employee attendance management system. This application provides a premium, offline-first dashboard designed to help you efficiently track team presence, manage profiles, and secure your data locally without requiring any internet connection.
+Welcome to **Staff AT**, a clean, modern, and professional desktop employee attendance management system. Staff AT offers a powerful, **hybrid offline-first experience**: it combines the speed and security of a local SQLite database with optional **Cloud Sync** capabilities via Supabase to keep your team data unified across your organization.
+
+---
+
+## ✨ Key Features in v1.6.0
+
+- **Hybrid Cloud Sync**: Securely sync employee records from Supabase while maintaining all detailed attendance data locally.
+- **Admin Command Center**: A premium dashboard for high-level insights, staff metrics, and system administration.
+- **Customizable API Endpoints**: Easily configure your own Vercel/Supabase backend details directly from the app settings.
+- **Dynamic UI**: Beautiful time-based greetings and a sophisticated **Dark Mode** with a fully themed custom window header.
+- **Advanced Employee Profiles**: Track attendance history, manage onboarding status, and store private administrative notes or external links.
+- **Local Database Management**: Built-in tools to Export and Import backups of your `attendance.db` file safely.
 
 ---
 
@@ -8,89 +19,55 @@ Welcome to **PeopleHub**, a clean, modern, and professional desktop employee att
 
 ### ⚠️ IMPORTANT INSTALLATION WARNING: DO NOT INSTALL IN C:\ DRIVE
 
-PeopleHub uses a local SQLite database (`attendance.db`) to store all your data securely on your own computer. Windows strictly restricts read and write permissions in the `C:\` drive (especially inside `C:\Program Files`). If installed there, the application will not be permitted to create or update its database, and your data **cannot be saved**.
+Staff AT uses a local SQLite database (`attendance.db`) to store your primary data. Windows strictly restricts read and write permissions in the `C:\` drive (especially inside `C:\Program Files`).
 
 **To ensure the application works correctly, please follow these steps:**
 
-1. Download the latest `PeopleHub-Installer.exe` from the [Releases page](../../releases).
-2. Run the installer. When prompted to select the destination folder, **change the installation directory** to a location outside of your protected `C:\` drive directories.
-   - **Recommended locations:** 
-     - `D:\PeopleHub` 
-     - `E:\Applications\PeopleHub`
-     - Or inside your user folder (e.g., `C:\Users\YourName\Documents\PeopleHub`).
-3. Proceed with the installation. 
-
-The database file (`attendance.db`) will be automatically generated inside that folder the very first time you open the app.
+1. Download the latest `Staff-AT-Installer.exe` from the [Releases page](../../releases).
+2. Run the installer. When prompted to select the destination folder, **change the installation directory** to a location outside of your protected `C:\` drive (e.g., `D:\StaffAT` or your `Documents` folder).
+3. The database file (`attendance.db`) and configuration (`config.properties`) will be generated inside that folder.
 
 ---
 
 ## 🚀 Getting Started
 
-Once installed correctly, launch PeopleHub from your desktop shortcut or the Windows Start menu.
+Once installed, launch Staff AT and log in using your administrator credentials.
 
-### 1. Initial Setup
-Upon opening the application for the first time, you will be greeted with the Login Screen. Enter your administrative credentials to access the Command Center (Dashboard).
+### 1. API Configuration (For New Systems)
+If you are setting up Staff AT for the first time with a custom backend:
+1. Go to the **Dashboard**.
+2. Scroll to the bottom and click **Application Settings**.
+3. Enter your **API Base URL** and **Admin Token** provided by your system administrator.
+4. Save Changes. This allows the app to communicate with your cloud database.
 
-**Default Admin Credentials:**
-- **Password:** `admin`
+### 2. Syncing Employees
+To pull your team directory from the cloud:
+1. Navigate to the **Employees** tab.
+2. The app will automatically attempt to sync new records, or you can trigger a refresh to ensure all local records are up to date with Supabase.
 
-### 2. Dashboard Overview
-The Command Center gives you a high-level view of:
-- **Total Staff**: Quickly see how many employees are currently registered in your system.
-- **Present Today**: See who is currently marked as present at a glance.
-- **Success Rate**: View overall attendance trends and metrics.
-
-### 3. Adding Employees
-To start using the app, you need to add your team members:
-1. Navigate to the **Employees** tab on the left sidebar.
-2. Click on the **New Employee** button.
-3. Fill in their details (Name, Contact, Onboarding Status, etc.).
-4. Click Save. They will now appear in your active directory.
-
-### 4. Marking Daily Attendance
-Tracking daily presence is quick and easy:
+### 3. Daily Attendance
+Tracking presence is quick and easy:
 1. Navigate to the **Daily Attendance** tab.
-2. You will see a list of all active employees.
-3. Simply click **Present**, **Absent**, or **Leave** next to each employee's name for the current date. All changes are saved automatically.
-
-### 5. Viewing Employee Profiles
-You can view detailed records for any staff member:
-1. Go to the **Employees** directory or the **Dashboard**.
-2. Click directly on an employee's row.
-3. Here, you can view their personal records, historical attendance grid, onboarding status, and safely add private HR/administrative notes or external links (like Google Sheets).
-
-### 6. Reports and History
-Navigate to the **Reports** tab to see an aggregated historical view. This allows you to measure attendance tracking adherence and review past records seamlessly.
+2. Simply click **Present**, **Absent**, or **Leave** next to each employee's name.
+3. All marks are saved instantly to your local database for maximum speed.
 
 ---
 
-## 💾 Backing Up Your Data
+## 💾 Managed Backups
 
-Since PeopleHub is entirely offline-first, your data is stored **only** on your local machine. We highly recommend regularly backing up your database to prevent data loss.
-
-**How to Backup:**
-1. Go to your **Dashboard**.
-2. Locate the **Database Backup** section (usually at the bottom right of the screen).
-3. Click **Export Database**.
-4. Choose a secure location (such as a USB drive, an external hard drive, or a cloud-synced folder like Google Drive/OneDrive) to save the downloaded `.db` file.
-
-**How to Restore or Move to a New Computer:**
-If you get a new computer or need to restore your data:
-1. Install PeopleHub on the new computer (Remember: Do not install in `C:\`).
-2. Run the application once so it creates a fresh `attendance.db` file, then close the app.
-3. Navigate to the folder where you installed PeopleHub.
-4. Replace the newly generated `attendance.db` file with your backed-up `.db` file.
-5. Launch the app, and all your previous data will be restored.
+Since your detailed attendance history is stored locally for privacy and speed, we highly recommend regular backups:
+- **Export**: Use the **Export Database** button on the Dashboard to save a snapshot of your records.
+- **Import**: Use the **Import Database** button to restore your data on a new machine.
 
 ---
 
 ## ❓ Troubleshooting
 
-- **The app won't save any data or crashes on startup:** 
-  You most likely installed the application in `C:\Program Files` or another protected Windows directory. Please uninstall the application and reinstall it in a location where it has write permissions, such as `D:\PeopleHub` or your `Documents` folder.
+- **"Permission Denied" errors or data not saving:** 
+  You most likely installed the application in `C:\Program Files`. Please reinstall it in a location with write permissions like `D:\StaffAT`.
   
-- **Where is my data stored?** 
-  Your data is completely private. It is never sent to the internet. It is stored solely in the `attendance.db` file located inside the exact folder where you installed the application.
+- **Sync is not working:** 
+  Check your **Application Settings** on the Dashboard to ensure your API Base URL and Admin Token are correct and that you have an active internet connection for the sync process.
 
 ---
-*Thank you for choosing PeopleHub for your employee management needs!*
+*Empowering managers with privacy-first, cloud-capable team tools.*
