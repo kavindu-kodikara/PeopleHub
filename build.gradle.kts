@@ -54,7 +54,7 @@ compose.desktop {
 
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe, TargetFormat.Deb)
             packageName = "Staff AT"
-            packageVersion = "1.0.0"
+            packageVersion = "1.5.1"
             vendor = "Kavindu Kodikara"
             description = "Employee Attendance & Management Dashboard"
             

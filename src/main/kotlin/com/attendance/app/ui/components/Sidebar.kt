@@ -41,7 +41,7 @@ fun Sidebar(currentScreen: Screen, navigationState: NavigationState) {
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Text(
-                    "PeopleHub",
+                    "Staff AT",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary

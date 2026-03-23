@@ -20,7 +20,7 @@ fun main() = application {
 
     Window(
         onCloseRequest = ::exitApplication, 
-        title = "Attendance App",
+        title = "Staff AT",
         icon = painterResource("icon.png"),
         state = WindowState(
             placement = WindowPlacement.Maximized,
