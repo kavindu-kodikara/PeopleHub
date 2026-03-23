@@ -24,9 +24,17 @@ object AppConfig {
     val apiAdminToken: String
         get() = props.getProperty("API_ADMIN_TOKEN", "a68cb2d148d5400f8686a4bd8450e8ce")
 
+    val isDarkMode: Boolean
+        get() = props.getProperty("IS_DARK_MODE", "false").toBoolean()
+
     fun updateConfig(baseUrl: String, token: String) {
         props.setProperty("API_BASE_URL", baseUrl)
         props.setProperty("API_ADMIN_TOKEN", token)
+        save()
+    }
+
+    fun updateTheme(isDark: Boolean) {
+        props.setProperty("IS_DARK_MODE", isDark.toString())
         save()
     }
 

@@ -49,10 +49,11 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 object ThemeState {
-    var isDark by mutableStateOf(false)
+    var isDark by mutableStateOf(com.attendance.app.data.AppConfig.isDarkMode)
     
     fun toggle() {
         isDark = !isDark
+        com.attendance.app.data.AppConfig.updateTheme(isDark)
     }
 }
 
