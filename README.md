@@ -33,6 +33,8 @@ Staff AT uses a local SQLite database (`attendance.db`) to store your primary da
 
 Once installed, launch Staff AT and log in using your administrator credentials.
 
+Passowrd : admin
+
 ### 1. API Configuration (For New Systems)
 If you are setting up Staff AT for the first time with a custom backend:
 1. Go to the **Dashboard**.
