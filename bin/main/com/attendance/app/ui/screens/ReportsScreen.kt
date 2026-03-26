@@ -18,8 +18,10 @@ import com.attendance.app.repository.EmployeeRepositoryImpl
 import com.attendance.app.ui.components.*
 import com.attendance.app.ui.navigation.NavigationState
 import com.attendance.app.ui.theme.*
+import com.attendance.app.service.ExcelExportService
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.io.File
 
 @Composable
 fun ReportsScreen(navigationState: NavigationState) {
@@ -46,22 +48,30 @@ fun ReportsScreen(navigationState: NavigationState) {
         loadData()
     }
 
-    fun exportGlobalCSV() {
-        try {
-            val fileName = "Attendance_Report_${startDate}_to_${endDate}.csv"
-            val file = java.io.File(fileName)
-            file.bufferedWriter().use { writer ->
-                writer.write("Employee,Date,Status,Leave Link,Note\n")
-                allRecordsInRange.forEach { record ->
-                    val empName = employees.find { it.id == record.employeeId }?.name ?: "Unknown"
-                    val leaveLink = record.leaveEmailLink ?: ""
-                    val note = record.note ?: ""
-                    writer.write("$empName,${record.date},${record.status},$leaveLink,$note\n")
+    val excelExportService = remember { ExcelExportService(employeeRepo, attendanceRepo) }
+
+    fun exportGlobalExcel() {
+        scope.launch {
+            try {
+                val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Save Attendance Report", java.awt.FileDialog.SAVE)
+                dialog.file = "Attendance_Report_Exported_${LocalDate.now()}.xlsx"
+                dialog.isVisible = true
+                
+                val directory = dialog.directory
+                val fileName = dialog.file
+                
+                if (directory != null && fileName != null) {
+                    val fullPath = File(directory, fileName).absolutePath
+                    val result = excelExportService.exportAttendanceToExcel(fullPath)
+                    result.onSuccess { path ->
+                        exportMessage = "Report exported to $path"
+                    }.onFailure { e ->
+                        exportMessage = "Export failed: ${e.message}"
+                    }
                 }
+            } catch (e: Exception) {
+                exportMessage = "Export failed: ${e.message}"
             }
-            exportMessage = "Report exported to $fileName"
-        } catch (e: Exception) {
-            exportMessage = "Export failed: ${e.message}"
         }
     }
 
@@ -89,7 +99,11 @@ fun ReportsScreen(navigationState: NavigationState) {
                 )
             }
             
-            PrimaryButton(text = "Export Global CSV", onClick = { exportGlobalCSV() })
+            PrimaryButton(
+                text = "Export to Excel",
+                icon = Icons.Default.FileDownload,
+                onClick = { exportGlobalExcel() }
+            )
         }
 
         Spacer(modifier = Modifier.height(32.dp))

@@ -15,4 +15,5 @@ interface AttendanceRepository {
     suspend fun getRecentActivity(limit: Int): List<com.attendance.app.domain.DashboardActivityItem>
     suspend fun getMonthlyStats(month: Int, year: Int): com.attendance.app.domain.MonthlyStats
     suspend fun getEmployeeStats(employeeId: Int): com.attendance.app.domain.EmployeeAttendanceStats
+    suspend fun getEarliestAttendanceDate(): LocalDate?
 }

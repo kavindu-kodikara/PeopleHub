@@ -161,4 +161,12 @@ class AttendanceRepositoryImpl : AttendanceRepository {
             attendanceRate = rate
         )
     }
+
+    override suspend fun getEarliestAttendanceDate(): LocalDate? = newSuspendedTransaction {
+        AttendanceTable
+            .slice(AttendanceTable.date.min())
+            .selectAll()
+            .map { it[AttendanceTable.date.min()] }
+            .singleOrNull()
+    }
 }

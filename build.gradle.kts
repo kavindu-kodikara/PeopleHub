@@ -41,6 +41,9 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation:2.3.10")
     implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.10")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+
+    // Excel Export
+    implementation("org.apache.poi:poi-ooxml:5.2.5")
     
 }
 
@@ -54,7 +57,7 @@ compose.desktop {
 
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe, TargetFormat.Deb)
             packageName = "Staff AT"
-            packageVersion = "1.6.0"
+            packageVersion = "1.7.0"
             vendor = "Kavindu Kodikara"
             description = "Employee Attendance & Management Dashboard"
             

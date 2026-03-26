@@ -33,7 +33,13 @@ fun main() = application {
         undecorated = true,
         state = windowState
     ) {
-        val navigationState = remember { NavigationState() }
+        val navigationState = remember { 
+            NavigationState().apply {
+                if (!com.attendance.app.data.AppConfig.isConfigured()) {
+                    navigateTo(Screen.Settings)
+                }
+            }
+        }
 
         AppTheme {
             Column(modifier = Modifier.fillMaxSize()) {

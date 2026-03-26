@@ -11,18 +11,22 @@ object AppConfig {
         if (configFile.exists()) {
             configFile.inputStream().use { props.load(it) }
         } else {
-            // Default values for development
-            props.setProperty("API_BASE_URL", "https://staff-at-web.vercel.app/")
-            props.setProperty("API_ADMIN_TOKEN", "a68cb2d148d5400f8686a4bd8450e8ce")
+            // Default values for fresh installation
+            props.setProperty("API_BASE_URL", "")
+            props.setProperty("API_ADMIN_TOKEN", "")
             save()
         }
     }
 
     val apiBaseUrl: String
-        get() = props.getProperty("API_BASE_URL", "https://staff-at-web.vercel.app/")
+        get() = props.getProperty("API_BASE_URL", "")
 
     val apiAdminToken: String
-        get() = props.getProperty("API_ADMIN_TOKEN", "a68cb2d148d5400f8686a4bd8450e8ce")
+        get() = props.getProperty("API_ADMIN_TOKEN", "")
+
+    fun isConfigured(): Boolean {
+        return apiBaseUrl.isNotEmpty() && apiAdminToken.isNotEmpty()
+    }
 
     val isDarkMode: Boolean
         get() = props.getProperty("IS_DARK_MODE", "false").toBoolean()
