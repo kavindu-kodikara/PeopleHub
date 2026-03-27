@@ -63,8 +63,14 @@ fun Sidebar(currentScreen: Screen, navigationState: NavigationState) {
             SidebarItem("Reports", Icons.Default.Assessment, currentScreen == Screen.Reports) {
                 navigationState.navigateTo(Screen.Reports)
             }
-            SidebarItem("Student Responses", Icons.Default.ContactPhone, currentScreen == Screen.StudentResponses) {
-                navigationState.navigateTo(Screen.StudentResponses)
+            SidebarItem("First Confirmation", Icons.Default.ContactPhone, currentScreen == Screen.FirstConfirmation) {
+                navigationState.navigateTo(Screen.FirstConfirmation)
+            }
+            SidebarItem("Registered Students", Icons.Default.HowToReg, currentScreen == Screen.RegisteredStudents) {
+                navigationState.navigateTo(Screen.RegisteredStudents)
+            }
+            SidebarItem("Recruitment Analysis", Icons.Default.Analytics, currentScreen == Screen.Analysis) {
+                navigationState.navigateTo(Screen.Analysis)
             }
 
             Spacer(modifier = Modifier.weight(1f))

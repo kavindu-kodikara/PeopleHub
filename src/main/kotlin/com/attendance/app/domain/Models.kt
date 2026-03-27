@@ -83,3 +83,30 @@ data class StudentResponse(
     val importDate: LocalDate = LocalDate.now(),
     val createdAt: LocalDateTime = LocalDateTime.now()
 )
+
+data class RegisteredStudent(
+    val id: Int = 0,
+    val firstName: String,
+    val lastName: String? = null,
+    val email: String? = null,
+    val nic: String? = null,
+    val whatsappNumber: String? = null,
+    val contactNumber: String? = null,
+    val landlineNumber: String? = null,
+    val counselorName: String,
+    val timeDuration: Int = 0, // in minutes
+    val employeeId: Int? = null,
+    val importDate: LocalDate = LocalDate.now(),
+    val createdAt: LocalDateTime = LocalDateTime.now()
+)
+
+data class EmployeeAnalysis(
+    val employeeName: String,
+    val employeeCode: String?,
+    val totalFirstConfirmations: Int,
+    val totalRegistered: Int,
+    val totalSuccess: Int,
+    val conversionRate: Double,
+    val successRate: Double
+)
+
