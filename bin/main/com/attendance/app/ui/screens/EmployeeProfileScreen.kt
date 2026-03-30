@@ -2,6 +2,7 @@ package com.attendance.app.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -214,6 +215,25 @@ fun EmployeeProfileScreen(employeeId: Int, navigationState: NavigationState) {
                                                 modifier = Modifier.height(16.dp),
                                                 color = MaterialTheme.colorScheme.outlineVariant
                                             )
+                                            // Dashboard Color indicator
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(16.dp)
+                                                    .background(
+                                                        Color(java.lang.Long.parseLong((emp.color ?: "#4285F4").removePrefix("#"), 16) or 0xFF000000L), 
+                                                        CircleShape
+                                                    )
+                                                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+                                            )
+                                            Text(
+                                                "Dashboard Line",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            VerticalDivider(
+                                                modifier = Modifier.height(16.dp),
+                                                color = MaterialTheme.colorScheme.outlineVariant
+                                            )
                                             Icon(
                                                 Icons.Default.Schedule,
                                                 null,
@@ -282,6 +302,12 @@ fun EmployeeProfileScreen(employeeId: Int, navigationState: NavigationState) {
                                             "Auth Password",
                                             emp.password ?: "********",
                                             Icons.Default.Lock
+                                        )
+                                        ProfileCell(
+                                            Modifier.weight(1f),
+                                            "Dashboard Color",
+                                            emp.color ?: "Default (#4285F4)",
+                                            Icons.Default.Palette
                                         )
                                     }
                                     ProfileCell(

@@ -22,6 +22,7 @@ class EmployeeRepositoryImpl : EmployeeRepository {
         username = this[EmployeesTable.username],
         password = this[EmployeesTable.password],
         onboardingStatus = this[EmployeesTable.onboardingStatus],
+        color = this[EmployeesTable.color],
         createdAt = this[EmployeesTable.createdAt],
         updatedAt = this[EmployeesTable.updatedAt]
     )
@@ -52,6 +53,7 @@ class EmployeeRepositoryImpl : EmployeeRepository {
             it[username] = employee.username
             it[password] = employee.password
             it[onboardingStatus] = employee.onboardingStatus
+            it[color] = employee.color
             it[updatedAt] = java.time.LocalDateTime.now()
         }
         updatedRows > 0

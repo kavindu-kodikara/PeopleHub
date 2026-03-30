@@ -16,6 +16,7 @@ object EmployeesTable : IntIdTable("employees") {
     val username = varchar("username", 255).nullable()
     val password = varchar("password", 255).nullable()
     val onboardingStatus = varchar("onboarding_status", 50) // "signed_in_office", "pending_office_signing"
+    val color = varchar("color", 50).nullable()
     val createdAt = datetime("created_at").clientDefault { LocalDateTime.now() }
     val updatedAt = datetime("updated_at").clientDefault { LocalDateTime.now() }
 }

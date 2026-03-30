@@ -46,6 +46,12 @@ class StudentResponseRepositoryImpl : StudentResponseRepository {
         }.count() > 0
     }
 
+    override suspend fun getAllByDateRange(startDate: LocalDate, endDate: LocalDate): List<StudentResponse> = newSuspendedTransaction {
+        StudentResponsesTable.select {
+            (StudentResponsesTable.importDate greaterEq startDate) and (StudentResponsesTable.importDate lessEq endDate)
+        }.map { toStudentResponse(it) }
+    }
+
     private fun toStudentResponse(row: ResultRow) = StudentResponse(
         id = row[StudentResponsesTable.id].value,
         timestamp = row[StudentResponsesTable.timestamp],

@@ -1,10 +1,9 @@
 package com.attendance.app.service
 
-import com.attendance.app.domain.EmployeeAnalysis
-import com.attendance.app.repository.EmployeeRepository
-import com.attendance.app.repository.StudentResponseRepository
-import com.attendance.app.repository.RegisteredStudentRepository
+import com.attendance.app.domain.*
+import com.attendance.app.repository.*
 import java.time.LocalDate
+import java.time.DayOfWeek
 
 class AnalysisService(
     private val employeeRepository: EmployeeRepository,
@@ -22,14 +21,6 @@ class AnalysisService(
         return employees.map { emp ->
             val empFC = fcByEmployee[emp.id] ?: emptyList()
             val empReg = regByEmployee[emp.id] ?: emptyList()
-
-            // Matching logic: Count unique registered students that were also in First Confirmations
-            // However, the requirement is:
-            // Total Calls (First Confirmation)
-            // Total Registered
-            // Total Success (>= 30 min)
-            // Conversion Rate: Registered / First Confirmation
-            // Success Rate: Success / Registered
 
             val totalFC = empFC.size
             val totalReg = empReg.size
@@ -49,5 +40,56 @@ class AnalysisService(
             )
         }.filter { it.totalFirstConfirmations > 0 || it.totalRegistered > 0 }
          .sortedBy { it.employeeCode ?: it.employeeName }
+    }
+
+    suspend fun getEmployeeRecruitmentTrends(startDate: LocalDate, endDate: LocalDate): List<EmployeeTrendData> {
+        val allEmployees = employeeRepository.getAllEmployees()
+        val fcList = studentResponseRepository.getAllByDateRange(startDate, endDate)
+        val regList = registeredStudentRepository.getAllByDateRange(startDate, endDate)
+
+        val fcByEmployeeAndDate = fcList.groupBy { it.employeeId to it.importDate }
+        val regByEmployeeAndDate = regList.groupBy { it.employeeId to it.importDate }
+
+        val allDates = mutableListOf<LocalDate>()
+        var current = startDate
+        while (!current.isAfter(endDate)) {
+            if (current.dayOfWeek != DayOfWeek.SUNDAY) {
+                allDates.add(current)
+            }
+            current = current.plusDays(1)
+        }
+
+        return allEmployees.map { emp ->
+            val dailyCounts = allDates.map { date ->
+                EmployeeDayCount(
+                    date = date,
+                    confirmations = fcByEmployeeAndDate[emp.id to date]?.size ?: 0,
+                    registrations = regByEmployeeAndDate[emp.id to date]?.size ?: 0
+                )
+            }
+            EmployeeTrendData(
+                employeeId = emp.id,
+                employeeName = emp.name,
+                color = emp.color,
+                dailyCounts = dailyCounts
+            )
+        }.filter { trend -> 
+            // Only include employees who have at least one registration or confirmation in the period
+            trend.dailyCounts.any { it.confirmations > 0 || it.registrations > 0 }
+        }
+    }
+
+    suspend fun getWeeklyRecruitmentSummary(date: LocalDate): WeeklyRecruitmentSummary {
+        val startOfWeek = date.with(DayOfWeek.MONDAY)
+        val endOfWeek = date.with(DayOfWeek.SATURDAY) // Week ends on Saturday as requested
+        
+        val fcList = studentResponseRepository.getAllByDateRange(startOfWeek, endOfWeek)
+        val regList = registeredStudentRepository.getAllByDateRange(startOfWeek, endOfWeek)
+        
+        val totalFC = fcList.size
+        val totalReg = regList.size
+        val rate = if (totalFC > 0) (totalReg.toDouble() / totalFC.toDouble()) * 100.0 else 0.0
+        
+        return WeeklyRecruitmentSummary(totalFC, totalReg, rate)
     }
 }

@@ -1,6 +1,7 @@
 package com.attendance.app.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,12 +10,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -22,6 +27,21 @@ import com.attendance.app.domain.ActivityType
 import com.attendance.app.domain.DashboardActivityItem
 import com.attendance.app.ui.theme.*
 import java.time.format.DateTimeFormatter
+import java.time.LocalDate
+import com.attendance.app.domain.WeeklyRecruitmentSummary
+import com.attendance.app.domain.EmployeeTrendData
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
+import org.jetbrains.skia.Paint
+import org.jetbrains.skia.TextLine
+import org.jetbrains.skia.Typeface
+import org.jetbrains.skia.Font
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 
 @Composable
 fun KPICard(
@@ -371,5 +391,299 @@ fun ColoredBadge(label: String, color: Color) {
             .padding(horizontal = 8.dp, vertical = 2.dp)
     ) {
         Text(label, style = MaterialTheme.typography.labelSmall, color = color, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+fun WeeklyRecruitmentSummaryHeader(
+    summary: WeeklyRecruitmentSummary,
+    modifier: Modifier = Modifier
+) {
+    SaaSCard(modifier = modifier, padding = 20.dp) {
+        Column {
+            Text("Weekly Recruitment Performance", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("First Confirmations", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(summary.totalFirstConfirmations.toString(), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = chart_color_1)
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Registered", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(summary.totalRegistered.toString(), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = chart_color_2)
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Conversion Rate", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(String.format("%.1f%%", summary.conversionRate), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = color_status_present)
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@Composable
+fun TabbedEmployeeRecruitmentChart(
+    employeeTrends: List<com.attendance.app.domain.EmployeeTrendData>,
+    modifier: Modifier = Modifier
+) {
+    var selectedTab by remember { mutableStateOf(0) }
+    val tabs = listOf("FC" to "First Confirmation", "RS" to "Registered Student")
+    val scrollState = rememberScrollState()
+    var hoveredPoint by remember { mutableStateOf<Pair<Int, Int>?>(null) } // empIndex, dayIndex
+    
+    SaaSCard(modifier = modifier, padding = 0.dp) {
+        Column {
+            // Header with TabRow
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.TrendingUp, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Recruitment Analytics", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                }
+                
+                TabRow(
+                    selectedTabIndex = selectedTab,
+                    containerColor = Color.Transparent,
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    divider = {},
+                    indicator = { tabPositions ->
+                        secondaryTabIndicator(
+                            Modifier.tabIndicatorOffset(tabPositions[selectedTab])
+                        )
+                    },
+                    modifier = Modifier.width(180.dp) // Narrower for short names
+                ) {
+                    tabs.forEachIndexed { index, pair ->
+                        TooltipBox(
+                            positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                            tooltip = {
+                                PlainTooltip {
+                                    Text(pair.second)
+                                }
+                            },
+                            state = rememberTooltipState()
+                        ) {
+                            Tab(
+                                selected = selectedTab == index,
+                                onClick = { selectedTab = index },
+                                text = { 
+                                    Text(
+                                        pair.first, 
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
+                                    ) 
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+            
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            
+            if (employeeTrends.isEmpty()) {
+                Box(modifier = Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.Center) {
+                    Text("No recruitment activity recorded for current period", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            } else {
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Box(modifier = Modifier.fillMaxWidth().height(300.dp).horizontalScroll(scrollState).padding(horizontal = 20.dp)) {
+                    // Calculate consistent width based on dates
+                    val allDates = employeeTrends.firstOrNull()?.dailyCounts?.map { it.date } ?: emptyList()
+                    val chartWidth = (allDates.size * 100).dp.coerceAtLeast(800.dp)
+                    
+                    Canvas(
+                        modifier = Modifier
+                            .width(chartWidth)
+                            .fillMaxHeight()
+                            .padding(bottom = 40.dp, top = 20.dp, start = 40.dp, end = 40.dp)
+                            .onPointerEvent(PointerEventType.Move) { event ->
+                                val pos = event.changes.first().position
+                                val maxVal = employeeTrends.flatMap { it.dailyCounts }.maxOfOrNull { 
+                                    if (selectedTab == 0) it.confirmations else it.registrations 
+                                }?.coerceAtLeast(10) ?: 10
+                                
+                                val spacePerDay = size.width / (allDates.size - 1).coerceAtLeast(1)
+                                val heightScale = size.height / maxVal
+                                
+                                var found = false
+                                for (eIdx in employeeTrends.indices) {
+                                    val emp = employeeTrends[eIdx]
+                                    for (dIdx in emp.dailyCounts.indices) {
+                                        val x = dIdx * spacePerDay
+                                        val count = if (selectedTab == 0) emp.dailyCounts[dIdx].confirmations else emp.dailyCounts[dIdx].registrations
+                                        val y = size.height - (count * heightScale)
+                                        
+                                        val dx = pos.x - x
+                                        val dy = pos.y - y
+                                        if (dx * dx + dy * dy < 30 * 30) { // Increased hit radius for better sensitivity
+                                            hoveredPoint = eIdx to dIdx
+                                            found = true
+                                            break
+                                        }
+                                    }
+                                    if (found) break
+                                }
+                                if (!found) hoveredPoint = null
+                            }
+                            .onPointerEvent(PointerEventType.Exit) {
+                                hoveredPoint = null
+                            }
+                    ) {
+                        // Find max value in current tab
+                        val maxVal = employeeTrends.flatMap { it.dailyCounts }.maxOfOrNull { 
+                            if (selectedTab == 0) it.confirmations else it.registrations 
+                        }?.coerceAtLeast(10) ?: 10
+                        
+                        val spacePerDay = size.width / (allDates.size - 1).coerceAtLeast(1)
+                        val heightScale = size.height / maxVal
+                        
+                        val textFont = Font(Typeface.makeDefault(), 11f)
+                        val textPaint = Paint().apply { color = 0xFF808080.toInt() }
+                        val tooltipPaint = Paint().apply { color = 0xFFFFFFFF.toInt() }
+                        val tooltipBgPaint = Paint().apply { color = 0xFF333333.toInt() }
+                        
+                        var hoveredCoords: androidx.compose.ui.geometry.Offset? = null
+                        var hoveredValue: Int = 0
+                        var hoveredColor: Color = Color.Gray
+
+                        // Draw Y-axis labels and grid lines
+                        for (i in 0..4) {
+                            val y = size.height - (i * (size.height / 4f))
+                            val value = (i * (maxVal / 4f)).toInt()
+                            
+                            // Grid line
+                            drawLine(Color.LightGray.copy(alpha = 0.2f), androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Offset(size.width, y))
+                            
+                            // Y-axis label
+                            drawContext.canvas.nativeCanvas.drawTextLine(
+                                TextLine.make(value.toString(), textFont),
+                                -35f, // Positioned in the left padding area
+                                y + 5f,
+                                textPaint
+                            )
+                        }
+                        
+                        employeeTrends.forEachIndexed { empIndex, employee ->
+                            val colorHex = employee.color ?: "#4285F4"
+                            val lineColor = Color(java.lang.Long.parseLong(colorHex.removePrefix("#"), 16) or 0xFF000000L)
+                            val trendPath = Path()
+                            
+                            employee.dailyCounts.forEachIndexed { index, dayCount ->
+                                val x = index * spacePerDay
+                                val count = if (selectedTab == 0) dayCount.confirmations else dayCount.registrations
+                                val y = size.height - (count * heightScale)
+                                val currentPoint = androidx.compose.ui.geometry.Offset(x, y)
+                                
+                                if (index == 0) {
+                                    trendPath.moveTo(x, y)
+                                } else {
+                                    trendPath.lineTo(x, y)
+                                }
+                                
+                                // Draw points
+                                drawCircle(color = lineColor, radius = 4f, center = currentPoint)
+                                
+                                // Tooltip detection
+                                hoveredPoint?.let { (hEmpIdx, hDayIdx) ->
+                                    if (hEmpIdx == empIndex && hDayIdx == index) {
+                                        hoveredCoords = currentPoint
+                                        hoveredValue = count
+                                        hoveredColor = lineColor
+                                    }
+                                }
+
+                                // Draw X-axis labels only for the first employee to avoid overlap
+                                if (employee == employeeTrends.first()) {
+                                    drawContext.canvas.nativeCanvas.drawTextLine(
+                                        TextLine.make(dayCount.date.format(DateTimeFormatter.ofPattern("dd MMM")), textFont),
+                                        x - 20f,
+                                        size.height + 30f,
+                                        textPaint
+                                    )
+                                }
+                            }
+                            
+                            drawPath(path = trendPath, color = lineColor, style = Stroke(width = 3f, cap = androidx.compose.ui.graphics.StrokeCap.Round))
+                        }
+
+                        // Draw the tooltip if active
+                        hoveredCoords?.let { coords ->
+                            drawCircle(color = hoveredColor, radius = 8f, center = coords, style = Stroke(width = 2f))
+                            drawCircle(color = Color.White, radius = 4f, center = coords)
+                            
+                            val toolTipText = hoveredValue.toString()
+                            val textLine = TextLine.make(toolTipText, Font(Typeface.makeDefault(), 12f))
+                            val rectWidth = textLine.width + 16f
+                            val rectHeight = 24f
+                            
+                            drawRoundRect(
+                                color = Color(0xFF333333),
+                                topLeft = androidx.compose.ui.geometry.Offset(coords.x - rectWidth / 2, coords.y - 40f),
+                                size = androidx.compose.ui.geometry.Size(rectWidth, rectHeight),
+                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(4f, 4f)
+                            )
+                            
+                            drawContext.canvas.nativeCanvas.drawTextLine(
+                                textLine,
+                                coords.x - textLine.width / 2,
+                                coords.y - 24f,
+                                tooltipPaint
+                            )
+                        }
+                    }
+                }
+                
+                // Legend - Wrapped Flow-like for many employees
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), modifier = Modifier.padding(top = 16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Employees: ", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(modifier = Modifier.weight(1f)) {
+                        Row(
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            employeeTrends.forEach { emp ->
+                                val colorHex = emp.color ?: "#4285F4"
+                                LegendItem(emp.employeeName, Color(java.lang.Long.parseLong(colorHex.removePrefix("#"), 16) or 0xFF000000L))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun secondaryTabIndicator(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.primary) {
+    Box(
+        modifier
+            .fillMaxWidth()
+            .height(3.dp)
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp))
+            .background(color)
+    )
+}
+
+@Composable
+fun LegendItem(label: String, color: Color) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(modifier = Modifier.size(10.dp).background(color, CircleShape).border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape))
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface)
     }
 }

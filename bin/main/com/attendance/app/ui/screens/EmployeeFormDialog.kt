@@ -12,6 +12,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
 
 @Composable
 fun EmployeeFormDialog(
@@ -31,6 +37,13 @@ fun EmployeeFormDialog(
     var employeeCode by remember { mutableStateOf(employeeToEdit.employeeCode ?: "") }
     var username by remember { mutableStateOf(employeeToEdit.username ?: "") }
     var password by remember { mutableStateOf(employeeToEdit.password ?: "") }
+    var color by remember { mutableStateOf(employeeToEdit.color ?: "#4285F4") }
+
+    val presetColors = listOf(
+        "#4285F4", "#EA4335", "#FBBC05", "#34A853", 
+        "#FF6D00", "#4615B2", "#00BCD4", "#E91E63", 
+        "#3F51B5", "#4CAF50", "#FFC107", "#795548", "#607D8B"
+    )
 
     SaaSModal(
         title = "Edit Employee Profile",
@@ -38,7 +51,7 @@ fun EmployeeFormDialog(
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.verticalScroll(rememberScrollState())
+            modifier = Modifier.padding(16.dp).verticalScroll(rememberScrollState())
         ) {
             SaaSOutlinedTextField(value = employeeCode, onValueChange = { employeeCode = it }, label = "Employee ID")
             SaaSOutlinedTextField(value = name, onValueChange = { name = it }, label = "Full Name")
@@ -52,6 +65,39 @@ fun EmployeeFormDialog(
                 SaaSOutlinedTextField(value = nic, onValueChange = { nic = it }, label = "NIC Number", modifier = Modifier.weight(1f))
             }
             
+            // Color Selection
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Dashboard Line Color", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    presetColors.forEach { hex ->
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(Color(java.lang.Long.parseLong(hex.removePrefix("#"), 16) or 0xFF000000L), CircleShape)
+                                .border(
+                                    width = if (color == hex) 3.dp else 1.dp,
+                                    color = if (color == hex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                                    shape = CircleShape
+                                )
+                                .clickable { color = hex },
+                            contentAlignment = androidx.compose.ui.Alignment.Center
+                        ) {
+                            if (color == hex) {
+                                Icon(
+                                    Icons.Default.Check, 
+                                    null, 
+                                    tint = androidx.compose.ui.graphics.Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // Onboarding Status Selection
             var statusExpanded by remember { mutableStateOf(false) }
             Box(modifier = Modifier.fillMaxWidth()) {
@@ -111,7 +157,8 @@ fun EmployeeFormDialog(
                             internalComment = internalComment,
                             employeeCode = employeeCode,
                             username = username,
-                            password = password
+                            password = password,
+                            color = color
                         ))
                     }, 
                     enabled = !isLoading && name.isNotBlank() && employeeCode.isNotBlank(),

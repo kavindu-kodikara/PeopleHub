@@ -11,6 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,6 +21,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.attendance.app.repository.AttendanceRepositoryImpl
 import com.attendance.app.repository.EmployeeRepositoryImpl
+import com.attendance.app.repository.RegisteredStudentRepositoryImpl
+import com.attendance.app.repository.StudentResponseRepositoryImpl
+import com.attendance.app.service.AnalysisService
+import com.attendance.app.domain.WeeklyRecruitmentSummary
+import com.attendance.app.domain.EmployeeTrendData
 import com.attendance.app.ui.components.*
 import com.attendance.app.ui.navigation.NavigationState
 import com.attendance.app.ui.navigation.Screen
@@ -30,10 +37,15 @@ import java.awt.FileDialog
 import java.awt.Frame
 import java.io.File
 import kotlin.system.exitProcess
+
 @Composable
 fun DashboardScreen(navigationState: NavigationState) {
     val employeeRepo = remember { EmployeeRepositoryImpl() }
     val attendanceRepo = remember { AttendanceRepositoryImpl() }
+    val studentRepo = remember { RegisteredStudentRepositoryImpl() }
+    val responseRepo = remember { StudentResponseRepositoryImpl() }
+    val analysisService = remember { AnalysisService(employeeRepo, responseRepo, studentRepo) }
+    
     val scope = rememberCoroutineScope()
     
     var totalEmployees by remember { mutableStateOf(0) }
@@ -43,6 +55,10 @@ fun DashboardScreen(navigationState: NavigationState) {
     var monthlyStats by remember { mutableStateOf<com.attendance.app.domain.MonthlyStats?>(null) }
     var todayAttendanceDetails by remember { mutableStateOf<List<Pair<com.attendance.app.domain.Employee, String?>>>(emptyList()) }
     var attendanceRateToday by remember { mutableStateOf(0.0) }
+    
+    var weeklyRecruitmentSummary by remember { mutableStateOf<WeeklyRecruitmentSummary?>(null) }
+    var employeeTrends by remember { mutableStateOf<List<EmployeeTrendData>>(emptyList()) }
+    
     var isLoading by remember { mutableStateOf(true) }
     
     var showImportConfirmDialog by remember { mutableStateOf<File?>(null) }
@@ -72,6 +88,13 @@ fun DashboardScreen(navigationState: NavigationState) {
                 val record = todayAttendance.find { it.employeeId == emp.id }
                 emp to record?.status
             }
+            
+            // Get recruitment analytics
+            val earliestDate = attendanceRepo.getEarliestAttendanceDate() ?: LocalDate.now().minusWeeks(4)
+            val yesterday = LocalDate.now().minusDays(1)
+            
+            weeklyRecruitmentSummary = analysisService.getWeeklyRecruitmentSummary(today)
+            employeeTrends = analysisService.getEmployeeRecruitmentTrends(earliestDate, yesterday)
             
             isLoading = false
         }
@@ -117,6 +140,17 @@ fun DashboardScreen(navigationState: NavigationState) {
             }
         } else {
             Spacer(modifier = Modifier.height(24.dp))
+
+            // 0. Recruitment Analytics (New Top Section)
+            weeklyRecruitmentSummary?.let { summary ->
+                WeeklyRecruitmentSummaryHeader(summary = summary)
+                Spacer(modifier = Modifier.height(20.dp))
+            }
+            
+            if (employeeTrends.isNotEmpty()) {
+                TabbedEmployeeRecruitmentChart(employeeTrends = employeeTrends)
+                Spacer(modifier = Modifier.height(24.dp))
+            }
 
             // 1. KPI Cards Row
             Row(

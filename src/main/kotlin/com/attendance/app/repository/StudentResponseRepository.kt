@@ -8,4 +8,5 @@ interface StudentResponseRepository {
     suspend fun getAllByDate(date: LocalDate): List<StudentResponse>
     suspend fun getByEmployeeId(employeeId: Int, date: LocalDate? = null): List<StudentResponse>
     suspend fun exists(timestamp: String, studentName: String, counselorName: String): Boolean
+    suspend fun getAllByDateRange(startDate: LocalDate, endDate: LocalDate): List<StudentResponse>
 }

@@ -39,6 +39,12 @@ class RegisteredStudentRepositoryImpl : RegisteredStudentRepository {
         }.map { toRegisteredStudent(it) }
     }
 
+    override suspend fun getAllByDateRange(startDate: LocalDate, endDate: LocalDate): List<RegisteredStudent> = newSuspendedTransaction {
+        RegisteredStudentsTable.select {
+            (RegisteredStudentsTable.importDate greaterEq startDate) and (RegisteredStudentsTable.importDate lessEq endDate)
+        }.map { toRegisteredStudent(it) }
+    }
+
     override suspend fun exists(firstName: String, counselorName: String, importDate: LocalDate): Boolean = newSuspendedTransaction {
         RegisteredStudentsTable.select {
             (RegisteredStudentsTable.firstName eq firstName) and 

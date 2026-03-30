@@ -16,6 +16,7 @@ data class Employee(
     val username: String? = null,
     val password: String? = null,
     val onboardingStatus: String = "pending_office_signing",
+    val color: String? = null,
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val updatedAt: LocalDateTime = LocalDateTime.now()
 )
@@ -108,5 +109,24 @@ data class EmployeeAnalysis(
     val totalSuccess: Int,
     val conversionRate: Double,
     val successRate: Double
+)
+
+data class EmployeeTrendData(
+    val employeeId: Int,
+    val employeeName: String,
+    val color: String?,
+    val dailyCounts: List<EmployeeDayCount>
+)
+
+data class EmployeeDayCount(
+    val date: java.time.LocalDate,
+    val confirmations: Int,
+    val registrations: Int
+)
+
+data class WeeklyRecruitmentSummary(
+    val totalFirstConfirmations: Int,
+    val totalRegistered: Int,
+    val conversionRate: Double
 )
 
