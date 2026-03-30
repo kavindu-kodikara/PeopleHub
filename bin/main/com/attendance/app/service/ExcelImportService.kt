@@ -15,7 +15,7 @@ class ExcelImportService(
     private val studentResponseRepository: StudentResponseRepository,
     private val registeredStudentRepository: RegisteredStudentRepository
 ) {
-    suspend fun importStudentResponses(filePath: String): Result<ImportResult> {
+    suspend fun importStudentResponses(filePath: String, importDate: LocalDate): Result<ImportResult> {
         return try {
             val employees = employeeRepository.getAllEmployees()
             val workbook: Workbook = XSSFWorkbook(FileInputStream(filePath))
@@ -69,7 +69,7 @@ class ExcelImportService(
                             databaseName = dbName,
                             counselorName = counselorName,
                             employeeId = matchedEmployee.id,
-                            importDate = LocalDate.now()
+                            importDate = importDate
                         )
                         studentResponseRepository.save(response)
                         importedCount++
@@ -87,7 +87,7 @@ class ExcelImportService(
         }
     }
 
-    suspend fun importRegisteredStudents(filePath: String): Result<ImportResult> {
+    suspend fun importRegisteredStudents(filePath: String, importDate: LocalDate): Result<ImportResult> {
         return try {
             val employees = employeeRepository.getAllEmployees()
             val workbook: Workbook = XSSFWorkbook(FileInputStream(filePath))
@@ -128,7 +128,7 @@ class ExcelImportService(
                 }
 
                 if (matchedEmployee != null) {
-                    if (registeredStudentRepository.exists(firstName, counselorName, LocalDate.now())) {
+                    if (registeredStudentRepository.exists(firstName, counselorName, importDate)) {
                         duplicateCount++
                     } else {
                         val student = RegisteredStudent(
@@ -142,7 +142,7 @@ class ExcelImportService(
                             counselorName = counselorName,
                             timeDuration = duration,
                             employeeId = matchedEmployee.id,
-                            importDate = LocalDate.now()
+                            importDate = importDate
                         )
                         registeredStudentRepository.save(student)
                         importedCount++

@@ -29,7 +29,7 @@ fun AnalysisScreen(navigationState: NavigationState) {
     val registeredStudentRepository = remember { RegisteredStudentRepositoryImpl() }
     val analysisService = remember { AnalysisService(employeeRepository, studentResponseRepository, registeredStudentRepository) }
     
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var selectedDate by remember { mutableStateOf(LocalDate.now().minusDays(1)) }
     var analysisData by remember { mutableStateOf(emptyList<EmployeeAnalysis>()) }
     var isLoading by remember { mutableStateOf(true) }
 

@@ -33,19 +33,89 @@ fun RegisteredStudentsScreen(navigationState: NavigationState) {
     val registeredStudentRepository = remember { RegisteredStudentRepositoryImpl() }
     val excelImportService = remember { ExcelImportService(employeeRepository, studentResponseRepository, registeredStudentRepository) }
     
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var selectedDate by remember { mutableStateOf(LocalDate.now().minusDays(1)) }
     var students by remember { mutableStateOf(emptyList<RegisteredStudent>()) }
 
     var employees by remember { mutableStateOf(emptyList<com.attendance.app.domain.Employee>()) }
     var isLoading by remember { mutableStateOf(true) }
     var importMessage by remember { mutableStateOf<String?>(null) }
     var isError by remember { mutableStateOf(false) }
+    var showImportDialog by remember { mutableStateOf(false) }
+    var importDate by remember { mutableStateOf(LocalDate.now().minusDays(1)) }
 
     LaunchedEffect(selectedDate) {
         isLoading = true
         students = registeredStudentRepository.getAllByDate(selectedDate)
         employees = employeeRepository.getAllEmployees()
         isLoading = false
+    }
+
+    if (showImportDialog) {
+        SaaSModal(
+            title = "Import Registered Students",
+            onDismissRequest = { showImportDialog = false }
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                Text(
+                    "Select the date for which you are importing the Excel data. All records in the sheet will be assigned to this date.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                SaaSCard(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        DateSelector(importDate) { importDate = it }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SecondaryButton("Cancel", onClick = { showImportDialog = false })
+                    Spacer(Modifier.width(12.dp))
+                    PrimaryButton(
+                        text = "Select Excel File",
+                        icon = Icons.Default.FileOpen,
+                        onClick = {
+                            val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Select Registered Students Excel", java.awt.FileDialog.LOAD)
+                            dialog.file = "*.xlsx"
+                            dialog.isVisible = true
+                            
+                            val directory = dialog.directory
+                            val fileName = dialog.file
+                            
+                            if (directory != null && fileName != null) {
+                                val fullPath = java.io.File(directory, fileName).absolutePath
+                                scope.launch {
+                                    isLoading = true
+                                    val importResult = excelImportService.importRegisteredStudents(fullPath, importDate)
+                                    importResult.fold(
+                                        onSuccess = {
+                                            importMessage = "Imported: ${it.imported}, Skipped: ${it.skipped}, Duplicates: ${it.duplicates}"
+                                            isError = false
+                                            selectedDate = importDate // Switch to the imported date to see results
+                                            students = registeredStudentRepository.getAllByDate(selectedDate)
+                                        },
+                                        onFailure = {
+                                            importMessage = "Error: ${it.message}"
+                                            isError = true
+                                        }
+                                    )
+                                    isLoading = false
+                                }
+                                showImportDialog = false
+                            }
+                        }
+                    )
+                }
+            }
+        }
     }
 
     SelectionContainer {
@@ -77,33 +147,9 @@ fun RegisteredStudentsScreen(navigationState: NavigationState) {
                 PrimaryButton(
                     text = "Import Excel",
                     icon = Icons.Default.FileUpload,
-                    onClick = {
-                        val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Select Registered Students Excel", java.awt.FileDialog.LOAD)
-                        dialog.file = "*.xlsx"
-                        dialog.isVisible = true
-                        
-                        val directory = dialog.directory
-                        val fileName = dialog.file
-                        
-                        if (directory != null && fileName != null) {
-                            val fullPath = java.io.File(directory, fileName).absolutePath
-                            scope.launch {
-                                isLoading = true
-                                val importResult = excelImportService.importRegisteredStudents(fullPath)
-                                importResult.fold(
-                                    onSuccess = {
-                                        importMessage = "Imported: ${it.imported}, Skipped: ${it.skipped}, Duplicates: ${it.duplicates}"
-                                        isError = false
-                                        students = registeredStudentRepository.getAllByDate(selectedDate)
-                                    },
-                                    onFailure = {
-                                        importMessage = "Error: ${it.message}"
-                                        isError = true
-                                    }
-                                )
-                                isLoading = false
-                            }
-                        }
+                    onClick = { 
+                        importDate = selectedDate // Default to current view date
+                        showImportDialog = true 
                     }
                 )
             }

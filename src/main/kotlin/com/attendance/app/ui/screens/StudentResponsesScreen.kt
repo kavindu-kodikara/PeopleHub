@@ -36,10 +36,12 @@ fun StudentResponsesScreen(navigationState: NavigationState) {
 
     var employees by remember { mutableStateOf<List<Employee>>(emptyList()) }
     var responses by remember { mutableStateOf<List<StudentResponse>>(emptyList()) }
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var selectedDate by remember { mutableStateOf(LocalDate.now().minusDays(1)) }
     var searchQuery by remember { mutableStateOf("") }
     var importStatus by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+    var showImportDialog by remember { mutableStateOf(false) }
+    var importDate by remember { mutableStateOf(LocalDate.now().minusDays(1)) }
 
     fun loadData() {
         scope.launch {
@@ -61,30 +63,72 @@ fun StudentResponsesScreen(navigationState: NavigationState) {
         }
     }
 
-    fun triggerImport() {
+    fun triggerImport(filePath: String, date: LocalDate) {
         scope.launch {
             try {
-                val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Select Student Response Excel", java.awt.FileDialog.LOAD)
-                dialog.isVisible = true
-                
-                val directory = dialog.directory
-                val fileName = dialog.file
-                
-                if (directory != null && fileName != null) {
-                    val fullPath = File(directory, fileName).absolutePath
-                    isLoading = true
-                    val result = excelImportService.importStudentResponses(fullPath)
-                    result.onSuccess { res ->
-                        importStatus = "Import successful: ${res.imported} imported, ${res.duplicates} duplicates, ${res.skipped} skipped"
-                        loadData()
-                    }.onFailure { e ->
-                        importStatus = "Import failed: ${e.message}"
-                    }
-                    isLoading = false
+                isLoading = true
+                val result = excelImportService.importStudentResponses(filePath, date)
+                result.onSuccess { res ->
+                    importStatus = "Import successful: ${res.imported} imported, ${res.duplicates} duplicates, ${res.skipped} skipped"
+                    selectedDate = date // Switch to the imported date to see results
+                    loadData()
+                }.onFailure { e ->
+                    importStatus = "Import failed: ${e.message}"
                 }
+                isLoading = false
             } catch (e: Exception) {
                 importStatus = "Error: ${e.message}"
                 isLoading = false
+            }
+        }
+    }
+
+    if (showImportDialog) {
+        SaaSModal(
+            title = "Import Student Responses",
+            onDismissRequest = { showImportDialog = false }
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                Text(
+                    "Select the date for which you are importing the Excel data. All records in the sheet will be assigned to this date.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                SaaSCard(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        DateSelector("Import Date", importDate) { importDate = it }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SecondaryButton("Cancel", onClick = { showImportDialog = false })
+                    Spacer(Modifier.width(12.dp))
+                    PrimaryButton(
+                        text = "Select Excel File",
+                        icon = Icons.Default.FileOpen,
+                        onClick = {
+                            val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Select Student Response Excel", java.awt.FileDialog.LOAD)
+                            dialog.isVisible = true
+                            val directory = dialog.directory
+                            val fileName = dialog.file
+                            
+                            if (directory != null && fileName != null) {
+                                val fullPath = java.io.File(directory, fileName).absolutePath
+                                triggerImport(fullPath, importDate)
+                                showImportDialog = false
+                            }
+                        }
+                    )
+                }
             }
         }
     }
@@ -113,7 +157,10 @@ fun StudentResponsesScreen(navigationState: NavigationState) {
                 PrimaryButton(
                     text = "Import Excel",
                     icon = Icons.Default.FileUpload,
-                    onClick = { triggerImport() }
+                    onClick = { 
+                        importDate = selectedDate // Default to current view date
+                        showImportDialog = true 
+                    }
                 )
             }
 
